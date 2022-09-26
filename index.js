@@ -1,7 +1,6 @@
-let input = document.querySelector("input")
-let autocompleteList = document.querySelector(".select-list")
-let repositoriesList = document.querySelector(".repositories-list")
-let data;
+let input = document.querySelector("input");
+let autocompleteList = document.querySelector(".select-list");
+let repositoriesList = document.querySelector(".repositories-list");
 
 const debounce = (fn, ms) => {
   let timeout;
@@ -23,54 +22,60 @@ function createAutocompleteList(arrRepo) {
     ul.append(li);
   }
   autocompleteList.append(ul);
-  return ul;
+  return [ul, arrRepo];
 }
 
-function addRepositories(index) {
-  let card = document.createElement("div")
-  card.className = "repositories-list__item"
-  card.innerHTML = `<ul><li>Name: ${data[index].name}</li>
-                    <li>Owner: ${data[index].owner.login}</li>
-                    <li>Stars: ${data[index].stargazers_count}</li></ul>
-                    <span></span>`
-  repositoriesList.append(card)
-  return card
+function addRepositories(index, arrRepo) {
+  let card = document.createElement("div");
+  card.className = "repositories-list__item";
+  card.innerHTML = `<ul><li>Name: ${arrRepo[index].name}</li>
+                    <li>Owner: ${arrRepo[index].owner.login}</li>
+                    <li>Stars: ${arrRepo[index].stargazers_count}</li></ul>
+                    <span></span>`;
+  repositoriesList.append(card);
+  return card;
 }
 
 function removeRepository(element) {
-  element.addEventListener('click', function(e){
-    e.currentTarget.childNodes.forEach(item => {
-      if(item.children[1] === e.target) item.remove()
+  element.addEventListener("click", function (e) {
+    e.currentTarget.childNodes.forEach((item) => {
+      if (item.children[1] === e.target) item.remove();
+    });
+  });
+}
+
+function clearAutocompleteList(){
+  if (document.querySelector(".autocomplete-list")) 
+    document.querySelector(".autocomplete-list").remove()
+}
+
+function onChange(e) {
+  if (!e.target.value) { 
+    clearAutocompleteList()
+    return
+  };
+  fetch(`https://api.github.com/search/repositories?q=${e.target.value}`)
+    .then((data) => {
+      clearAutocompleteList()
+      return data.json();
     })
-  })
+    .then((res) => createAutocompleteList(res.items.slice(0, 5)))
+    .then((res) => select(res))
+    .then(() => removeRepository(repositoriesList))
+    .catch((err) => console.log(err));
 }
 
-async function onChange(e) {
-  if (document.querySelector(".autocomplete-list")) document.querySelectorAll(".autocomplete-list").forEach(i => i.remove())
-  try {
-    const result = fetch(
-      `https://api.github.com/search/repositories?q=${e.target.value}`
-    ).then((res) => res.json())
-    data = await result.then(res => res.items.slice(0, 5))
-    result
-      .then(res => createAutocompleteList(res.items.slice(0, 5)))
-      .then(res => select(res))
-      .then(res => removeRepository(repositoriesList))
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-function select(element) {
-  element.addEventListener('click', function(e) {
+function select(arr) {
+  const [element, arrRepo] = arr;
+  element.addEventListener("click", function (e) {
     e.currentTarget.childNodes.forEach((li, index) => {
-      if(e.target === li) {
-        addRepositories(index)
+      if (e.target === li) {
+        addRepositories(index, arrRepo);
         element.remove();
         input.value = "";
-      } 
+      }
     });
-  })
+  });
 }
 
-input.addEventListener("keyup", debounce(onChange, 300));
+input.addEventListener("input", debounce(onChange, 200));

@@ -55,20 +55,12 @@
     margin: 0;
 }
 .repositories-list__item span{
+    background: url('./icon/Vector\ 1.svg') no-repeat center;
     height: 46px;
     width: 46px;
     float: right;
     position: relative;
     cursor: pointer;
-}
-.repositories-list__item span::before{
-    content: url('./icon/Vector\ 1.svg');
-    position: absolute;
-}
-.repositories-list__item span::after{
-    content: url('./icon/Vector\ 1.svg');
-    position: absolute;
-    transform: rotate(90Deg);
 }
 
 .repositories-list__item li{
